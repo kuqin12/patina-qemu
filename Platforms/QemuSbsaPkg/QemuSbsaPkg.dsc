@@ -721,6 +721,11 @@
 !endif
 
   #
+  # MM Communicate. The MM buffer base is defined as ns_comm_buffer in the STMM secure
+  # partition manifest.
+  #
+  gArmTokenSpaceGuid.PcdMmBufferBase|0x000001007fe00000
+  #
   # MM Communicate buffer size, should match ns_comm_buffer pages count in STMM
   # secure partition manifest.
   #
@@ -809,6 +814,10 @@
   gArmTokenSpaceGuid.PcdArmArchTimerVirtIntrNum|27
   # PPI #10
   gArmTokenSpaceGuid.PcdArmArchTimerHypIntrNum|26
+
+  gArmTokenSpaceGuid.PcdGenericWatchdogControlBase|0x50011000
+  gArmTokenSpaceGuid.PcdGenericWatchdogRefreshBase|0x50010000
+  gArmTokenSpaceGuid.PcdGenericWatchdogEl2IntrNum|48
 
   # Set this to be gOemConfigPolicyGuid
   gSetupDataPkgTokenSpaceGuid.PcdConfigurationPolicyGuid|{GUID("ba320ade-e132-4c99-a3df-74d673ea6f76")}
@@ -916,12 +925,6 @@
 !if $(TPM2_ENABLE) == TRUE
   gEfiSecurityPkgTokenSpaceGuid.PcdTpm2HashMask|0x02
 !endif
-
-  #
-  # MM Communicate. The MM buffer base is defined as ns_comm_buffer in the STMM secure
-  # partition manifest.
-  #
-  gArmTokenSpaceGuid.PcdMmBufferBase|0x000001007fe00000
 
 [PcdsDynamicHii]
 !if $(TPM2_ENABLE) == TRUE
@@ -1052,7 +1055,7 @@
 
   ArmPkg/Drivers/ArmGicDxe/ArmGicDxe.inf
   ArmPkg/Drivers/TimerDxe/TimerDxe.inf
-  MdeModulePkg/Universal/WatchdogTimerDxe/WatchdogTimer.inf
+  ArmPkg/Drivers/GenericWatchdogDxe/GenericWatchdogDxe.inf
 
   #
   # Status Code Routing
