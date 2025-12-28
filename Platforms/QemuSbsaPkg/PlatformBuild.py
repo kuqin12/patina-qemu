@@ -425,7 +425,7 @@ class PlatformBuilder(UefiBuilder, BuildSettingsManager):
             data = {
                 "stmm": {
                     "image": {
-                        "file": os.path.join(op_fv, 'BL32_AP_MM.fd'),
+                        "file": os.path.join(op_fv, 'FV_STANDALONE_MM_COMPACT.Fv'),
                         "offset": "0x2000"
                     },
                     "pm": {

@@ -28,6 +28,7 @@
   QemuPkg/QemuPkg.dec
   MdeModulePkg/MdeModulePkg.dec
   QemuSbsaPkg/QemuSbsaPkg.dec
+  AdvLoggerPkg/AdvLoggerPkg.dec
 
 [LibraryClasses]
   ArmLib
@@ -42,13 +43,15 @@
   gArmTokenSpaceGuid.PcdSystemMemoryBase
   gArmTokenSpaceGuid.PcdSystemMemorySize
   gArmTokenSpaceGuid.PcdMmBufferBase
-
-[FixedPcd]
+  
+  [FixedPcd]
   gArmTokenSpaceGuid.PcdFdBaseAddress
   gArmTokenSpaceGuid.PcdFdSize
   gArmTokenSpaceGuid.PcdArmPrimaryCoreMask
   gArmTokenSpaceGuid.PcdArmPrimaryCore
   gArmTokenSpaceGuid.PcdMmBufferSize
+  gAdvLoggerPkgTokenSpaceGuid.PcdAdvancedLoggerBase
+  gAdvLoggerPkgTokenSpaceGuid.PcdAdvancedLoggerPages
 
 [Ppis]
   gArmMpCoreInfoPpiGuid

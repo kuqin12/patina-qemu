@@ -544,7 +544,8 @@
   AdvancedLoggerAccessLib|AdvLoggerPkg/Library/AdvancedLoggerAccessLib/AdvancedLoggerAccessLib.inf
 
 [LibraryClasses.common.SEC]
-  DebugLib|MdePkg/Library/BaseDebugLibSerialPort/BaseDebugLibSerialPort.inf
+  # DebugLib|MdePkg/Library/BaseDebugLibSerialPort/BaseDebugLibSerialPort.inf
+  AdvancedLoggerLib|AdvLoggerPkg/Library/AdvancedLoggerLib/SecArm/AdvancedLoggerLib.inf
 
 [LibraryClasses.common.PEI_CORE]
   AdvancedLoggerLib|AdvLoggerPkg/Library/AdvancedLoggerLib/PeiCore/AdvancedLoggerLib.inf
@@ -593,6 +594,7 @@
   gQemuPkgTokenSpaceGuid.PcdEnableMemoryProtection|$(MEMORY_PROTECTION)
   gAdvLoggerPkgTokenSpaceGuid.PcdAdvancedLoggerLocator|TRUE
   gAdvLoggerPkgTokenSpaceGuid.PcdAdvancedLoggerAutoWrapEnable|TRUE
+  gAdvLoggerPkgTokenSpaceGuid.PcdAdvancedLoggerFixedInRAM|TRUE
 
 [PcdsFeatureFlag.AARCH64]
   #
@@ -730,6 +732,11 @@
   # secure partition manifest.
   #
   gArmTokenSpaceGuid.PcdMmBufferSize|0x30000
+
+  #
+  # Advanced Logger Base Address
+  #
+  gAdvLoggerPkgTokenSpaceGuid.PcdAdvancedLoggerBase|0x1007FA00000
 
   #
   # PLDA PCI Root Complex
@@ -1470,6 +1477,7 @@
   FfaFeaturePkg/SecurePartitions/MsSecurePartition/MsSecurePartition.inf {
     <LibraryClasses>
       NULL|MdePkg/Library/StackCheckLibNull/StackCheckLibNull.inf
+      ArmFfaLib|MdeModulePkg/Library/ArmFfaLib/ArmFfaLibBase.inf
       MemoryAllocationLib|MdeModulePkg/Library/BaseMemoryAllocationLibNull/BaseMemoryAllocationLibNull.inf
       StandaloneMmCoreEntryPoint|FfaFeaturePkg/Library/SecurePartitionEntryPoint/SecurePartitionEntryPoint.inf
       Tpm2DeviceLib|SecurityPkg/Library/Tpm2DeviceLibDTpm/Tpm2DeviceLibDTpmStandaloneMm.inf
