@@ -18,7 +18,7 @@
 #include <Library/HobLib.h>
 
 // Number of Virtual Memory Map Descriptors
-#define MAX_VIRTUAL_MEMORY_MAP_DESCRIPTORS  5
+#define MAX_VIRTUAL_MEMORY_MAP_DESCRIPTORS  6
 
 #define RESOURCE_CAP  (EFI_RESOURCE_ATTRIBUTE_PRESENT | \
                       EFI_RESOURCE_ATTRIBUTE_INITIALIZED | \
@@ -227,6 +227,19 @@ ArmPlatformGetVirtualMemoryMap (
     NULL
     );
 
+  // Reserved the region for MM communication buffer, which is backed by system memory
+  BuildMemoryAllocationHob (
+    PcdGet64 (PcdMmBufferBase),
+    PcdGet64 (PcdMmBufferSize),
+    EfiReservedMemoryType
+    );
+
+  BuildMemoryAllocationHob (
+    PcdGet64 (PcdAdvancedLoggerBase),
+    PcdGet32 (PcdAdvancedLoggerPages) * EFI_PAGE_SIZE,
+    EfiRuntimeServicesData
+    );
+
   // Remap the FD region as normal executable memory
   VirtualMemoryTable[2].PhysicalBase = PcdGet64 (PcdFdBaseAddress);
   VirtualMemoryTable[2].VirtualBase  = VirtualMemoryTable[2].PhysicalBase;
@@ -239,8 +252,14 @@ ArmPlatformGetVirtualMemoryMap (
   VirtualMemoryTable[3].Length       = PcdGet64 (PcdMmBufferSize);
   VirtualMemoryTable[3].Attributes   = ARM_MEMORY_REGION_ATTRIBUTE_UNCACHED_UNBUFFERED;
 
+  // MM Memory Space
+  VirtualMemoryTable[4].PhysicalBase = PcdGet64 (PcdAdvancedLoggerBase);
+  VirtualMemoryTable[4].VirtualBase  = PcdGet64 (PcdAdvancedLoggerBase);
+  VirtualMemoryTable[4].Length       = PcdGet32 (PcdAdvancedLoggerPages) * EFI_PAGE_SIZE;
+  VirtualMemoryTable[4].Attributes   = ARM_MEMORY_REGION_ATTRIBUTE_WRITE_BACK;
+
   // End of Table
-  ZeroMem (&VirtualMemoryTable[4], sizeof (ARM_MEMORY_REGION_DESCRIPTOR));
+  ZeroMem (&VirtualMemoryTable[5], sizeof (ARM_MEMORY_REGION_DESCRIPTOR));
 
   *VirtualMemoryMap = VirtualMemoryTable;
 }

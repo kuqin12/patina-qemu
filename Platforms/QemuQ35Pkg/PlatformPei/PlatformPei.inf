@@ -42,12 +42,14 @@
   MdeModulePkg/MdeModulePkg.dec
   SecurityPkg/SecurityPkg.dec
   UefiCpuPkg/UefiCpuPkg.dec
+  PatinaPkg/PatinaPkg.dec
   QemuPkg/QemuPkg.dec
   QemuQ35Pkg/QemuQ35Pkg.dec
 
 [Guids]
   gEfiMemoryTypeInformationGuid
   gFdtHobGuid
+  gPatinaPerformanceConfigHobGuid
   gDxeMemoryProtectionSettingsGuid # MU_CHANGE
   gMmMemoryProtectionSettingsGuid # MU_CHANGE
 

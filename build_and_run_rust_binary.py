@@ -94,6 +94,7 @@ def _parse_arguments() -> argparse.Namespace:
     parser.add_argument(
         "--build-target",
         "-b",
+        type=str.upper,
         choices=["DEBUG", "RELEASE"],
         default="DEBUG",
         help="Build target, either DEBUG or RELEASE.",
@@ -101,6 +102,7 @@ def _parse_arguments() -> argparse.Namespace:
     parser.add_argument(
         "--platform",
         "-p",
+        type=str.upper,
         choices=["Q35", "SBSA"],
         default="Q35",
         help="QEMU platform such as Q35 or SBSA.",
@@ -108,7 +110,7 @@ def _parse_arguments() -> argparse.Namespace:
     parser.add_argument(
         "--toolchain",
         "-t",
-        type=str,
+        type=str.upper,
         default="VS2022",
         help="Toolchain to use for building. "
         "Q35 default: VS2022. SBSA default: GCC5.",
@@ -139,6 +141,13 @@ def _parse_arguments() -> argparse.Namespace:
         type=str,
         default=None,
         help="Feature set for patina-dxe-core-qemu build"
+    )
+    parser.add_argument(
+        "--monitor-port",
+        "-m",
+        type=int,
+        default=None,
+        help="Port to use for QEMU monitor communication.",
     )
 
     args = parser.parse_args()
@@ -311,8 +320,12 @@ def _configure_settings(args: argparse.Namespace) -> Dict[str, Path]:
             "-serial",
             f"tcp:127.0.0.1:{args.serial_port},server,nowait",
         ]
+
         if args.gdb_port:
             qemu_cmd += ["-gdb", f"tcp::{args.gdb_port}"]
+
+        if args.monitor_port:
+            qemu_cmd += ["-monitor", f"telnet:127.0.0.1:{args.monitor_port},server,nowait"]
 
         if args.os:
             qemu_cmd += args.os
@@ -430,6 +443,9 @@ def _configure_settings(args: argparse.Namespace) -> Dict[str, Path]:
 
         if args.gdb_port:
             qemu_cmd += ["-gdb", f"tcp::{args.gdb_port}"]
+
+        if args.monitor_port:
+            qemu_cmd += ["-monitor", f"telnet:127.0.0.1:{args.monitor_port},server,nowait"]
 
         if args.os:
             qemu_cmd += args.os
