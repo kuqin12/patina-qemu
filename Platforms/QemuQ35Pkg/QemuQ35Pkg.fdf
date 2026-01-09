@@ -305,16 +305,6 @@ READ_LOCK_STATUS   = TRUE
 #
 
 INF  MdeModulePkg/Universal/PCD/Dxe/Pcd.inf
-
-!if $(BUILD_RUST_CODE) == TRUE
-# Simple pure Rust DXE driver that is loaded by Rust DXE Core
-INF  QemuQ35Pkg/RustDriverDxe/RustDriverDxe.inf
-
-# Simple C Test DXE driver used to test Rust DXE Core FFI interfaces.
-INF  QemuQ35Pkg/RustFfiTestDxe/RustFfiTestDxe.inf
-INF  QemuQ35Pkg/RustFfiImageTestDxe/RustFfiImageTestDxe.inf
-!endif
-
 INF  MdeModulePkg/Universal/ReportStatusCodeRouter/RuntimeDxe/ReportStatusCodeRouterRuntimeDxe.inf
 INF  MdeModulePkg/Universal/StatusCodeHandler/RuntimeDxe/StatusCodeHandlerRuntimeDxe.inf
 
@@ -508,14 +498,7 @@ INF  MmSupervisorPkg/Drivers/MmSupervisorRing3Performance/MmSupervisorRing3Perfo
 # COMMENTED OUT DUE TO LACK OF TPM
 # INF  SecurityPkg/Tcg/MemoryOverwriteControl/TcgMor.inf
 INF  MdeModulePkg/Universal/EsrtFmpDxe/EsrtFmpDxe.inf
-!if $(BUILD_RUST_CODE) == TRUE
-INF  HidPkg/UsbHidDxe/UsbHidDxe.inf
-INF  HidPkg/UefiHidDxe/UefiHidDxe.inf
-# Remove for space and functionality considerations
-#INF  MsCorePkg/HelloWorldRustDxe/HelloWorldRustDxe.inf
-!else
 INF  MdeModulePkg/Bus/Usb/UsbMouseAbsolutePointerDxe/UsbMouseAbsolutePointerDxe.inf
-!endif
 INF  DfciPkg/Application/DfciMenu/DfciMenu.inf
 INF  MsGraphicsPkg/PrintScreenLogger/PrintScreenLogger.inf
 INF  SecurityPkg/Hash2DxeCrypto/Hash2DxeCrypto.inf
@@ -581,7 +564,7 @@ FILE FREEFORM = PCD(gZeroTouchPkgTokenSpaceGuid.PcdZeroTouchCertificateFile) {
     SECTION UI= "EdkShell"
   }
   FILE FREEFORM = PCD(gOemPkgTokenSpaceGuid.PcdLogoFile) {
-    SECTION RAW = OemPkg/FrontPage/Resources/BootLogo.bmp
+    SECTION RAW = Logo/patina_boot_logo.bmp
     SECTION UI = "Logo"
   }
   FILE FREEFORM = PCD(gOemPkgTokenSpaceGuid.PcdFrontPageLogoFile) {
@@ -605,16 +588,6 @@ FILE FREEFORM = PCD(gZeroTouchPkgTokenSpaceGuid.PcdZeroTouchCertificateFile) {
   FILE FREEFORM = gMmSupervisorPolicyFileGuid {
     SECTION RAW = $(POLICY_BIN_PATH)
   }
-
-!if $(BUILD_RUST_CODE) == TRUE
-  FILE DRIVER = A14E35E2-BB32-4446-8622-C1874B8284E4 {
-    SECTION GUIDED 3D532050-5CDA-4FD0-879E-0F7F630D5AFB PROCESSING_REQUIRED = TRUE {
-      SECTION DXE_DEPEX=$(OUTPUT_DIRECTORY)/$(TARGET)_$(TOOL_CHAIN_TAG)/X64/MsCorePkg/HelloWorldRustDxe/HelloWorldRustDxe/OUTPUT/HelloWorldRustDxe.depex
-      SECTION PE32=$(OUTPUT_DIRECTORY)/$(TARGET)_$(TOOL_CHAIN_TAG)/X64/HelloWorldRustDxe.efi
-      SECTION UI= "HelloWorldRustDxe"
-    }
-  }
-!endif
 
 ################################################################################
 #

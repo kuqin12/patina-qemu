@@ -50,11 +50,6 @@
   MSFT:*_*_*_CC_FLAGS = /D DISABLE_NEW_DEPRECATED_INTERFACES $(PERFORMANCE_OPTIONS)
   GCC:*_*_*_CC_FLAGS = -D DISABLE_NEW_DEPRECATED_INTERFACES $(PERFORMANCE_OPTIONS)
 
-  #
-  # Disable stack cookies in this repo (not supported in Rust modules).
-  #
-  MSFT:*_*_*_CC_FLAGS = /GS-
-
   MSFT:*_*_*_DLINK_FLAGS = /ALIGN:64
   GCC:*_GCC5_*_DLINK_FLAGS = -z common-page-size=64
   GCC:*_CLANGPDB_*_DLINK_FLAGS = /ALIGN:64 /FILEALIGN:64

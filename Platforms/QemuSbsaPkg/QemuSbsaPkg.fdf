@@ -421,14 +421,7 @@ READ_LOCK_STATUS   = TRUE
   INF  MsWheaPkg/MsWheaReport/Dxe/MsWheaReportDxe.inf
   INF  MsCorePkg/MuVarPolicyFoundationDxe/MuVarPolicyFoundationDxe.inf
   INF  MsCorePkg/LoadOptionVariablePolicyDxe/LoadOptionVariablePolicyDxe.inf
-!if $(BUILD_RUST_CODE) == TRUE
-  INF  MsCorePkg/HelloWorldRustDxe/HelloWorldRustDxe.inf
-  INF  HidPkg/UsbHidDxe/UsbHidDxe.inf
-  INF  HidPkg/UefiHidDxe/UefiHidDxe.inf
-  INF  QemuQ35Pkg/RustDriverDxe/RustDriverDxe.inf
-!else
   INF  MdeModulePkg/Bus/Usb/UsbMouseAbsolutePointerDxe/UsbMouseAbsolutePointerDxe.inf
-!endif
   INF  MsGraphicsPkg/PrintScreenLogger/PrintScreenLogger.inf
   INF  MsCorePkg/AcpiRGRT/AcpiRgrt.inf
   INF  SecurityPkg/Hash2DxeCrypto/Hash2DxeCrypto.inf
@@ -460,7 +453,7 @@ READ_LOCK_STATUS   = TRUE
   # Graphic icons and logos
   #
   FILE FREEFORM = PCD(gOemPkgTokenSpaceGuid.PcdLogoFile) {
-    SECTION RAW = OemPkg/FrontPage/Resources/BootLogo.bmp
+    SECTION RAW = Logo/patina_boot_logo.bmp
     SECTION UI = "Logo"
   }
   FILE FREEFORM = PCD(gOemPkgTokenSpaceGuid.PcdFrontPageLogoFile) {
