@@ -112,9 +112,22 @@ NorFlashCreateInstance (
       return Status;
     }
   } else {
-    DEBUG ((DEBUG_ERROR, "standalone MM NOR Flash driver only support FVB.\n"));
-    FreePool (Instance);
-    return EFI_UNSUPPORTED;
+    //
+    // For non-variable-storage devices (e.g., TPM NV), install FVB protocol
+    // without firmware volume header initialization.
+    //
+    Instance->StartLba = 0;
+
+    Status = gMmst->MmInstallProtocolInterface (
+                      &Instance->Handle,
+                      &gEfiSmmFirmwareVolumeBlockProtocolGuid,
+                      EFI_NATIVE_INTERFACE,
+                      &Instance->FvbProtocol
+                      );
+    if (EFI_ERROR (Status)) {
+      FreePool (Instance);
+      return Status;
+    }
   }
 
   *NorFlashInstance = Instance;

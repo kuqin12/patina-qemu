@@ -366,7 +366,7 @@ FvbGetPhysicalAddress (
 
   ASSERT (Address != NULL);
 
-  *Address = mFlashNvStorageVariableBase;
+  *Address = Instance->RegionBaseAddress;
   return EFI_SUCCESS;
 }
 
