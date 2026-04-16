@@ -29,3 +29,5 @@
 [FixedPcd]
   gQemuSbsaPkgTokenSpaceGuid.PcdFlashNvStorageBase
   gQemuSbsaPkgTokenSpaceGuid.PcdFlashNvStorageSize
+  gQemuSbsaPkgTokenSpaceGuid.PcdTpmNvStorageBase
+  gQemuSbsaPkgTokenSpaceGuid.PcdTpmNvStorageSize

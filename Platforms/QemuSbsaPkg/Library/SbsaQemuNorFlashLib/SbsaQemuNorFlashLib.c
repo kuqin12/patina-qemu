@@ -9,6 +9,7 @@
 
 #include <Base.h>
 #include <PiDxe.h>
+#include <Library/BaseLib.h>
 #include <Library/VirtNorFlashPlatformLib.h>
 
 #define QEMU_NOR_BLOCK_SIZE  SIZE_256KB
@@ -21,12 +22,20 @@ VirtNorFlashPlatformInitialization (
   return EFI_SUCCESS;
 }
 
-VIRT_NOR_FLASH_DESCRIPTION  mNorFlashDevice =
+VIRT_NOR_FLASH_DESCRIPTION  mNorFlashDevices[] =
 {
-  FixedPcdGet64 (PcdFlashNvStorageBase),
-  FixedPcdGet64 (PcdFlashNvStorageBase),
-  FixedPcdGet32 (PcdFlashNvStorageSize),
-  QEMU_NOR_BLOCK_SIZE
+  {
+    FixedPcdGet64 (PcdFlashNvStorageBase),
+    FixedPcdGet64 (PcdFlashNvStorageBase),
+    FixedPcdGet32 (PcdFlashNvStorageSize),
+    QEMU_NOR_BLOCK_SIZE
+  },
+  {
+    FixedPcdGet64 (PcdTpmNvStorageBase),
+    FixedPcdGet64 (PcdTpmNvStorageBase),
+    FixedPcdGet32 (PcdTpmNvStorageSize),
+    QEMU_NOR_BLOCK_SIZE
+  }
 };
 
 EFI_STATUS
@@ -35,7 +44,7 @@ VirtNorFlashPlatformGetDevices (
   OUT UINT32                      *Count
   )
 {
-  *NorFlashDescriptions = &mNorFlashDevice;
-  *Count                = 1;
+  *NorFlashDescriptions = mNorFlashDevices;
+  *Count                = ARRAY_SIZE (mNorFlashDevices);
   return EFI_SUCCESS;
 }
