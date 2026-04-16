@@ -27,7 +27,7 @@
 
 	description = "SBSA StMM";
 	ffa-version = <0x00010002>; /* 31:16 - Major, 15:0 - Minor */
-	uuid = <0xdcae8d37 0x46446bf0 0xab401483 0xa3873c93>, <0xA6FADD3D 0xB44E1B36 0x108D24A4 0x53169D08>;
+	uuid = <0xdcae8d37 0x46446bf0 0xab401483 0xa3873c93>, <0xA6FADD3D 0xB44E1B36 0x108D24A4 0x53169D08>, <0xa462b817 0xaf4f0618 0x9a08b386 0x61383558>;
 	id = <0x8001>;
 	execution-ctx-count = <1>;
 	exception-level = <1>; /* SEL0*/
@@ -88,6 +88,13 @@
 		// 	attributes = <SECURE_RW>;
 		// };
 
+		internal_tpm_crb {
+			description = "internal tpm crb";
+			base-address = <0x00000100 0x00200000>;
+			pages-count = <0x10>;
+			attributes = <0x3>;
+		};
+
 		/*
 		 * Secure UART region.
 		 */
@@ -103,6 +110,15 @@
 		variable_flash {
 			base-address = <0x0 0x01000000>;
 			pages-count = <0xC0>;
+			attributes = <0x3>;
+		};
+
+		/*
+		 * TPM NV Storage Flash.
+		 */
+		tpm_nv_flash {
+			base-address = <0x0 0x010C0000>;
+			pages-count = <0x40>;
 			attributes = <0x3>;
 		};
 	};

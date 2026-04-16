@@ -53,7 +53,7 @@
 
   DEFINE TTY_TERMINAL            = FALSE
 !ifndef TPM2_ENABLE
-  DEFINE TPM2_ENABLE             = FALSE
+  DEFINE TPM2_ENABLE             = TRUE
 !endif
   DEFINE TPM2_CONFIG_ENABLE      = FALSE
   DEFINE BUILD_UNIT_TESTS        = TRUE
@@ -745,6 +745,10 @@
   #
   gAdvLoggerPkgTokenSpaceGuid.PcdAdvancedLoggerBase|0x1007FA00000
 
+!if $(TPM2_ENABLE) == TRUE
+  gQemuSbsaPkgTokenSpaceGuid.PcdTpmUniqueValue|$(PLATFORM_UNIQUE_VALUE)
+!endif
+
 [PcdsDynamicDefault.common]
 
   ## PL031 RealTimeClock
@@ -808,6 +812,7 @@
   #
 !if $(TPM2_ENABLE) == TRUE
   gEfiSecurityPkgTokenSpaceGuid.PcdTpm2HashMask|0x02
+  gEfiSecurityPkgTokenSpaceGuid.PcdTcg2HashAlgorithmBitmap|0x00000002
 !endif
 
 [PcdsDynamicHii]
@@ -1189,16 +1194,32 @@
     <LibraryClasses>
       NULL|MdePkg/Library/StackCheckLibNull/StackCheckLibNull.inf
     <PcdsFixedAtBuild>
-      gEfiMdePkgTokenSpaceGuid.PcdDebugPrintErrorLevel|0x80000000
+      # gEfiMdePkgTokenSpaceGuid.PcdDebugPrintErrorLevel|0x80000000
       gEfiMdeModulePkgTokenSpaceGuid.PcdSerialRegisterBase|0x60040000
       gArmTokenSpaceGuid.PcdArmArchTimerFreqInHz|62500000
     <PcdsPatchableInModule>
       gEfiMdeModulePkgTokenSpaceGuid.PcdFfaLibConduitSmc|FALSE
   }
 
+  QemuSbsaPkg/FtpmSmm/FtpmSmm.inf {
+    <PcdsFixedAtBuild>
+      gQemuSbsaPkgTokenSpaceGuid.PcdTpmSecureCrbBase|0x10000200000
+      gQemuSbsaPkgTokenSpaceGuid.PcdTpmSecureCrbSize|0x5000
+      gEfiMdeModulePkgTokenSpaceGuid.PcdSerialRegisterBase|0x60040000
+      gArmTokenSpaceGuid.PcdArmArchTimerFreqInHz|62500000
+    <LibraryClasses>
+      TpmLib|TcgTpmPkg/Library/TpmLib/TpmLib.inf
+      PlatformTpmLib|QemuSbsaPkg/Library/PlatformTpmQemuSbsaLib/PlatformTpmQemuSbsaLib.inf
+      OpensslLib|TcgTpmPkg/Library/OpensslLib/OpensslLibFull.inf
+      BaseCryptLib|TcgTpmPkg/Library/BaseCryptLib/SmmCryptLib.inf
+      IntrinsicLib|CryptoPkg/Library/IntrinsicLib/IntrinsicLib.inf
+    <PcdsPatchableInModule>
+      gEfiMdeModulePkgTokenSpaceGuid.PcdFfaLibConduitSmc|FALSE
+  }
+
   ArmPkg/Drivers/StandaloneMmCpu/StandaloneMmCpu.inf {
     <PcdsFixedAtBuild>
-      gEfiMdePkgTokenSpaceGuid.PcdDebugPrintErrorLevel|0x80000000
+      # gEfiMdePkgTokenSpaceGuid.PcdDebugPrintErrorLevel|0x80000000
       gEfiMdeModulePkgTokenSpaceGuid.PcdSerialRegisterBase|0x60040000
       gArmTokenSpaceGuid.PcdArmArchTimerFreqInHz|62500000
   }

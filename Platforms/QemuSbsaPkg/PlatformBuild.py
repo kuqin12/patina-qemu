@@ -317,7 +317,8 @@ class PlatformBuilder(UefiBuilder, BuildSettingsManager):
         self.env.SetValue("MU_SCHEMA_FILE_NAME", "QemuSbsaPkgCfgData.xml", "Platform Hardcoded")
         self.env.SetValue("HAF_TFA_BUILD", "FALSE", "Platform Hardcoded", overridable=True)
         self.env.SetValue("TOOL_CHAIN_TAG", "CLANGPDB", "Platform Hardcoded")
-        
+        self.env.SetValue("BLD_*_PLATFORM_UNIQUE_VALUE", hex(uuid.uuid4().int & ((1<<64)-1)), "Build time hardcoded")
+
         # If HAF/TF-A binaries are not in sync, and we are on Windows, exit without building the platform because we
         # cannot compile TF-A on Windows. Otherwise, (if on Linux) we force the build of TF-A to ensure the binaries
         # are in sync.

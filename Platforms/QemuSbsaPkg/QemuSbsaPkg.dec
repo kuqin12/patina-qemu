@@ -70,6 +70,14 @@
   #
   gQemuSbsaPkgTokenSpaceGuid.PcdDeviceTreeAllocationPadding|256|UINT32|0x0000000D
 
+  gQemuSbsaPkgTokenSpaceGuid.PcdTpmSecureCrbBase|0x00|UINT64|0x0000000E
+  gQemuSbsaPkgTokenSpaceGuid.PcdTpmSecureCrbSize|0x1000|UINT64|0x0000000F
+
+  gQemuSbsaPkgTokenSpaceGuid.PcdTpmNvStorageBase|0x0|UINT64|0x00000010
+  gQemuSbsaPkgTokenSpaceGuid.PcdTpmNvStorageSize|0x0|UINT64|0x00000011
+
+  gQemuSbsaPkgTokenSpaceGuid.PcdTpmUniqueValue|0xDEADBEEFFEEDF00D|UINT64|0x00000012
+
 [PcdsDynamic.common]
   gQemuSbsaPkgTokenSpaceGuid.PcdSystemManufacturer|L""|VOID*|0x00000110
   gQemuSbsaPkgTokenSpaceGuid.PcdSystemSerialNumber|L""|VOID*|0x00000111
