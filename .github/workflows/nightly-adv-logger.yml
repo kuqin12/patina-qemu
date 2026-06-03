@@ -49,14 +49,14 @@ jobs:
           - config: Platforms/QemuQ35Pkg/PlatformBuild.py
             target: RELEASE
             platform: Q35
-          # SBSA DEBUG
-          - config: Platforms/QemuSbsaPkg/PlatformBuild.py
+          # Arm Virt DEBUG
+          - config: Platforms/QemuArmVirtPkg/PlatformBuild.py
             target: DEBUG
-            platform: SBSA
-          # SBSA RELEASE
-          - config: Platforms/QemuSbsaPkg/PlatformBuild.py
+            platform: Arm Virt
+          # Arm Virt RELEASE
+          - config: Platforms/QemuArmVirtPkg/PlatformBuild.py
             target: RELEASE
-            platform: SBSA
+            platform: Arm Virt
     steps:
       # Checkout the repository to the runner or container
       - name: Checkout repository
