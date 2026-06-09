@@ -9,7 +9,7 @@
 [submodule "Silicon/Arm/TFA"]
 	path = Silicon/Arm/TFA
 	url = https://github.com/TrustedFirmware-A/trusted-firmware-a.git
-	branch = v2.13-rc0
+	branch = v2.15.0
 [submodule "Features/MM_SUPV"]
 	path = Features/MM_SUPV
 	url = https://github.com/microsoft/mu_feature_mm_supv.git
@@ -17,6 +17,7 @@
 [submodule "Silicon/Arm/HAF"]
 	path = Silicon/Arm/HAF
 	url = https://github.com/TF-Hafnium/hafnium.git
+	branch = v2.15.0
 [submodule "Features/FFA"]
 	path = Features/FFA
 	url = https://github.com/microsoft/mu_feature_ffa.git
