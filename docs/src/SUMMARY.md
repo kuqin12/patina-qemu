@@ -33,4 +33,5 @@
 
 - [TpmShellApp on QEMU Platforms](tpm/tpm_shell_app.md)
 - [TPM on ArmVirt](tpm/tpm_armvirt.md)
+- [Hybrid KVM/TCG TrustZone Plan](tpm/hybrid_kvm_tcg.md)
 - [TPM on Q35](tpm/tpm_q35.md)
