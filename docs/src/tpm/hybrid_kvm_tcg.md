@@ -222,10 +222,23 @@ The reproducible test is `tests/arm-kvm/run-ffa-smccc-smp.sh` in the QEMU tree.
 Ten consecutive four-vCPU iterations passed with exactly two FF-A traces per
 vCPU and clean PSCI shutdown.
 
-The SMCCC filter, synthetic register round trip, PSCI isolation, and SMP caller
-behavior therefore pass the initial runtime gate. Interrupt behavior remains
-pending; Phase 2 must not begin until the remaining Phase 1 interrupt checks are
-complete.
+Interrupt validation uses the opt-in test delay:
+
+```text
+-accel kvm,arm-ffa-forward=on,arm-ffa-stub-delay-ms=250
+```
+
+The `tests/arm-kvm/run-ffa-smccc-irq.sh` guest configures the GICv3 virtual timer
+PPI on all four vCPUs. CPU0 arms a timer to expire during the delayed FF-A exit;
+the interrupt is delivered before the guest executes the SMC continuation.
+Meanwhile, vCPUs 1-3 continue servicing periodic virtual timers, with each
+recording at least four interrupts while CPU0 is in userspace. A zero-delay
+negative control fails with no interrupt observed at the SMC continuation,
+confirming that the positive test covers the intended overlap. Ten consecutive
+positive iterations passed.
+
+The Phase 1 SMCCC filter, register round trip, PSCI isolation, SMP caller, and
+interrupt behavior gates now pass on this host. Phase 2 has not begun.
 
 ### Phase 2: Shadow TCG Bootstrap
 
