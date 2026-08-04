@@ -315,15 +315,16 @@ guest that sends the TPM service `DIRECT_REQ2` and validates `DIRECT_RESP2` from
 MSSP. `tests/arm-kvm/run-hybrid-ffa-busy.sh` starts two KVM vCPUs, verifies one
 exit from each CPU, and requires one direct response plus one `FFA_BUSY`.
 
-The internal CRB at `0x40200000` remains ordinary machine RAM. Hybrid machine
-initialization writes a marker through the KVM-visible system address space,
-reads it through the shadow normal address space, and restores the original
-bytes. The QEMU `tpm-crb` device is now available on Arm and supports an
-experimental custom memory container and base address. On hybrid `virt`, it is
-forced into the shadow secure address space at `0x0c000000`; it does not appear
-in KVM's system FlatView. Existing x86 CRB defaults and qtests remain unchanged.
-`tests/arm-kvm/run-hybrid-crb-mapping.sh` validates both CRB properties with a
-temporary `swtpm` backend.
+The firmware-owned internal CRB buffer remains ordinary machine RAM, so KVM and
+the shadow normal view share its existing backing without a QEMU TPM-address
+assignment. The external TPM model is unchanged: the Arm runner still creates
+`tpm-tis-device,tpmdev=tpm0`, a dynamic SysBus TIS device. Hybrid mode links that
+device to a second dynamic platform bus overlaid only in the shadow secure view.
+Its MMIO address is allocated by the platform-bus mechanism rather than
+hardcoded in TPM or `virt` device code, and the external TPM is omitted from the
+normal-world ACPI tables and KVM FlatView.
+`tests/arm-kvm/run-hybrid-tpm-mapping.sh` validates dynamic secure placement and
+KVM exclusion with a temporary `swtpm` backend.
 
 The immutable runtime trampoline occupies one KVM-visible page at `0x0b000000`;
 it contains only `SMC` and `WFI`, not secure state. The real TPM command path is
