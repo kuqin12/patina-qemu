@@ -276,10 +276,10 @@ With `SECURE_FLASH0.fd` and `QEMU_EFI.fd`, the shadow worker boots BL1, BL2, BL3
 Hafnium, STMM, and MSSP. STMM and MSSP each enter their message loop, and TF-A
 reaches the normal-world BL33 boundary at `0x04000000`. A synthetic
 `FFA_MSG_SEND_DIRECT_REQ2` then reaches MSSP endpoint `0x8002` and returns
-`FFA_MSG_SEND_DIRECT_RESP2` to a deterministic boundary at `0x40100004`. The
-current MSSP image was built with `TPM2_ENABLE=False`, so its TPM stub returns a
-service-level error; the FF-A transport and secure return are validated here,
-while TPM semantics remain a Phase 3 test.
+`FFA_MSG_SEND_DIRECT_RESP2` through a read-only `SMC`/`WFI` trampoline at
+`0x0b000000`. The current MSSP image was built with `TPM2_ENABLE=False`, so its
+TPM stub returns a service-level error. The FF-A transport and secure return are
+validated here, while TPM semantics remain a Phase 3 test.
 
 After QEMU's initial reset, the shadow remains at the captured BL33 boundary and
 the secure GIC retains the firmware-initialized state. The captured BL33 `x0-x3`
@@ -289,9 +289,8 @@ DXE then execute under KVM.
 
 The reproducible test is `tests/arm-kvm/run-hybrid-shadow-bootstrap.sh` in the
 QEMU tree. Migration is explicitly blocked. General reset, snapshots, multiple
-shadow pCPUs, and routing runtime `KVM_EXIT_HYPERCALL` requests to the persistent
-worker are not yet supported. The Phase 2 bootstrap and synthetic direct-request
-exit criterion passes; Phase 3 has not begun.
+shadow pCPUs, and secure-call timeouts are not yet supported. The Phase 2
+bootstrap and synthetic direct-request exit criterion passes.
 
 ### Phase 3: Shared CRB and TPM
 
@@ -302,6 +301,35 @@ exit criterion passes; Phase 3 has not begun.
 
 Exit criterion: a TPM capability command initiated by normal-world firmware or
 an OS completes through MSSP and `swtpm`.
+
+#### Current Phase 3 Status
+
+Runtime AArch64 `KVM_EXIT_HYPERCALL` requests now synchronize `x0-x17`, submit
+the payload to the persistent shadow worker, execute TF-A/Hafnium/MSSP, and copy
+the secure response back to the originating KVM vCPU. Non-hybrid mode retains
+the Phase 1 `FFA_NOT_SUPPORTED` stub. The serialized worker returns
+zero-extended `FFA_BUSY` to a competing caller rather than queueing it.
+
+`tests/arm-kvm/run-hybrid-ffa-runtime.sh` boots a bare-metal normal-world KVM
+guest that sends the TPM service `DIRECT_REQ2` and validates `DIRECT_RESP2` from
+MSSP. `tests/arm-kvm/run-hybrid-ffa-busy.sh` starts two KVM vCPUs, verifies one
+exit from each CPU, and requires one direct response plus one `FFA_BUSY`.
+
+The internal CRB at `0x40200000` remains ordinary machine RAM. Hybrid machine
+initialization writes a marker through the KVM-visible system address space,
+reads it through the shadow normal address space, and restores the original
+bytes. The QEMU `tpm-crb` device is now available on Arm and supports an
+experimental custom memory container and base address. On hybrid `virt`, it is
+forced into the shadow secure address space at `0x0c000000`; it does not appear
+in KVM's system FlatView. Existing x86 CRB defaults and qtests remain unchanged.
+`tests/arm-kvm/run-hybrid-crb-mapping.sh` validates both CRB properties with a
+temporary `swtpm` backend.
+
+The immutable runtime trampoline occupies one KVM-visible page at `0x0b000000`;
+it contains only `SMC` and `WFI`, not secure state. The real TPM command path is
+still pending a TPM-enabled MSSP image and the production `swtpm` launch
+configuration. Phase 3's TPM capability-command exit criterion has therefore
+not passed yet.
 
 ### Phase 4: SMP and Contention
 
