@@ -238,7 +238,7 @@ confirming that the positive test covers the intended overlap. Ten consecutive
 positive iterations passed.
 
 The Phase 1 SMCCC filter, register round trip, PSCI isolation, SMP caller, and
-interrupt behavior gates now pass on this host. Phase 2 has not begun.
+interrupt behavior gates now pass on this host.
 
 ### Phase 2: Shadow TCG Bootstrap
 
@@ -250,6 +250,48 @@ interrupt behavior gates now pass on this host. Phase 2 has not begun.
 
 Exit criterion: TF-A and Hafnium reach their waiting state under shadow TCG,
 then process a synthetic direct request and return to the boundary.
+
+#### Current Phase 2 Status
+
+The implementation is opt-in with:
+
+```text
+-machine virt,hybrid-secure=on
+```
+
+KVM remains the machine accelerator and owns only the normal-world vCPUs. The
+hybrid mode initializes a secondary TCG translation runtime without setting
+TCG as the active accelerator, realizes one unlisted TCG `max` Arm CPU, and
+keeps one dedicated request-driven TCG worker alive. QMP CPU enumeration shows
+only the requested KVM `host-arm-cpu` objects.
+
+The shadow CPU has separate normal and secure address-space views. Secure flash,
+secure RAM, UART1, and a one-vCPU emulated GICv3 are overlaid only in the secure
+view. Normal RAM and flash1 remain shared through the existing memory regions.
+Shadow-only normal and secure tag-memory views provide the MTE support required
+by the current Hafnium image. TCG TLB maintenance skips KVM CPUs and executes
+broadcast invalidations locally for the single shadow CPU.
+
+With `SECURE_FLASH0.fd` and `QEMU_EFI.fd`, the shadow worker boots BL1, BL2, BL31,
+Hafnium, STMM, and MSSP. STMM and MSSP each enter their message loop, and TF-A
+reaches the normal-world BL33 boundary at `0x04000000`. A synthetic
+`FFA_MSG_SEND_DIRECT_REQ2` then reaches MSSP endpoint `0x8002` and returns
+`FFA_MSG_SEND_DIRECT_RESP2` to a deterministic boundary at `0x40100004`. The
+current MSSP image was built with `TPM2_ENABLE=False`, so its TPM stub returns a
+service-level error; the FF-A transport and secure return are validated here,
+while TPM semantics remain a Phase 3 test.
+
+After QEMU's initial reset, the shadow remains at the captured BL33 boundary and
+the secure GIC retains the firmware-initialized state. The captured BL33 `x0-x3`
+and PC are transferred to KVM CPU0. This host does not expose nested EL2, so KVM
+retains its NS-EL1 PSTATE rather than receiving the shadow EL2 PSTATE. UEFI and
+DXE then execute under KVM.
+
+The reproducible test is `tests/arm-kvm/run-hybrid-shadow-bootstrap.sh` in the
+QEMU tree. Migration is explicitly blocked. General reset, snapshots, multiple
+shadow pCPUs, and routing runtime `KVM_EXIT_HYPERCALL` requests to the persistent
+worker are not yet supported. The Phase 2 bootstrap and synthetic direct-request
+exit criterion passes; Phase 3 has not begun.
 
 ### Phase 3: Shared CRB and TPM
 
