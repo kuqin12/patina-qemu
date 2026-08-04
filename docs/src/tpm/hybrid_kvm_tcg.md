@@ -203,9 +203,29 @@ number range `0x60-0x8e` for both SMC32 and SMC64, and handles the resulting
 The `kvm_arm_ffa_stub` trace event records the calling vCPU, function ID, `x1`,
 and `x2`.
 
-The AArch64 QEMU target compiles with this path. Runtime validation of the
-filter, register round trip, PSCI isolation, interrupts, and calls from every
-vCPU remains pending on an Arm64 KVM host.
+Runtime validation completed on a four-vCPU Arm64 KVM host running Linux
+7.0.0-28-generic. The generic `kvm_vm_check_attr()` helper incorrectly rejected
+the filter because `KVM_CAP_VM_ATTRIBUTES` reported zero, even though the Arm
+VM-fd `KVM_HAS_DEVICE_ATTR` ioctl supports `KVM_ARM_VM_SMCCC_FILTER`. Probing the
+VM-fd attribute directly allowed both filters to be installed.
+
+A bare-metal guest started vCPUs 1-3 with PSCI `CPU_ON`, then issued one SMC32
+call (`0x84000063`) and one SMC64 call (`0xc400006f`) from every vCPU. All eight
+calls exited to the QEMU handler on the originating CPU. Every caller received
+`FFA_ERROR` in `x0`, zero-extended `FFA_NOT_SUPPORTED` in `x2`, and zero in
+`x1` and `x3-x17`. All PSCI `CPU_ON` calls and the final PSCI `SYSTEM_OFF`
+succeeded without producing FF-A userspace exits. Calls immediately below and
+above the SMC32 and SMC64 filter ranges also remained in KVM and produced no
+userspace exit.
+
+The reproducible test is `tests/arm-kvm/run-ffa-smccc-smp.sh` in the QEMU tree.
+Ten consecutive four-vCPU iterations passed with exactly two FF-A traces per
+vCPU and clean PSCI shutdown.
+
+The SMCCC filter, synthetic register round trip, PSCI isolation, and SMP caller
+behavior therefore pass the initial runtime gate. Interrupt behavior remains
+pending; Phase 2 must not begin until the remaining Phase 1 interrupt checks are
+complete.
 
 ### Phase 2: Shadow TCG Bootstrap
 
