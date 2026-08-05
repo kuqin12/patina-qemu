@@ -79,7 +79,7 @@ class QemuRunner(uefi_helper_plugin.IUefiHelperPlugin):
         cmd = [
             "swtpm", "socket",
             "--tpmstate", f"dir={tpm_dir}",
-            "--ctrl", f"type=unixio,path={tpm_sock}",
+            "--ctrl", f"type=unixio,path={tpm_sock},terminate",
             "--tpm2",
             "--log", "level=1",
         ]
@@ -97,12 +97,14 @@ class QemuRunner(uefi_helper_plugin.IUefiHelperPlugin):
         """Terminates the swtpm subprocess if it is still running."""
         if swtpm_proc is None or swtpm_proc.poll() is not None:
             return
-        swtpm_proc.terminate()
         try:
             swtpm_proc.wait(timeout=5)
         except subprocess.TimeoutExpired:
-            logging.warning("swtpm did not exit after terminate. Killing it.")
-            swtpm_proc.kill()
+            try:
+                swtpm_proc.terminate()
+            except PermissionError:
+                logging.warning("swtpm did not exit after QEMU disconnected "
+                                "and cannot be signaled by this process.")
 
     @staticmethod
     def Runner(env):
