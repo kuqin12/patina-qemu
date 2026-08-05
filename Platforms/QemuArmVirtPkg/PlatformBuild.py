@@ -720,6 +720,7 @@ class PlatformBuilder(UefiBuilder, BuildSettingsManager):
             self.InjectVcVarsOfInterests(["LIB", "Path"])
 
             clang_exe = "clang.exe"
+            linker_exe = "ld.lld.exe"
             choco_path = shell_environment.GetEnvironment().get_shell_var("CHOCOLATEYINSTALL")
             shell_environment.GetEnvironment().insert_path(str(Path(choco_path) / "bin"))
             shell_environment.GetEnvironment().insert_path(shell_environment.GetEnvironment().get_shell_var("CLANG_BIN"))
@@ -733,6 +734,7 @@ class PlatformBuilder(UefiBuilder, BuildSettingsManager):
             # Then we can make the firmware images with the fiptool built above
         else:
             clang_exe = "clang"
+            linker_exe = "ld.lld"
 
         # Specify the filename
         filename = Path(self.env.GetValue("BUILD_OUTPUT_BASE")) / "sp_layout.json"
@@ -744,6 +746,7 @@ class PlatformBuilder(UefiBuilder, BuildSettingsManager):
         # Second, put together the command to build the firmware.
         cmd = "make"
         args  = "CC=" + clang_exe
+        args += " LD=" + linker_exe
         args += " PLAT=" + self.env.GetValue("QEMU_PLATFORM").lower()
         args += " ARCH=" + self.env.GetValue("TARGET_ARCH").lower()
         args += " DEBUG=" + str(1 if self.env.GetValue("TARGET").lower() == 'debug' else 0)
@@ -762,8 +765,8 @@ class PlatformBuilder(UefiBuilder, BuildSettingsManager):
         temp_bash = Path(self.env.GetValue("BUILD_OUTPUT_BASE")) / "temp.sh"
         with open(temp_bash, "w") as f:
             f.write("#!/bin/bash\n")
-            f.write("poetry --verbose install\n")
-            f.write("poetry env activate\n")
+            f.write("set -euo pipefail\n")
+            f.write("poetry --verbose install --no-root\n")
             f.write("poetry show\n")
             f.write(f"{cmd} {args}\n")
 
