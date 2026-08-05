@@ -95,7 +95,8 @@ class QemuCommandBuilder:
 
             self._args.extend(["-machine", machine_config])
         elif self._architecture == QemuArchitecture.ARM_VIRT:
-            self._args.extend(["-machine", "virt,secure=on,virtualization=on,gic-version=3,mte=on,iommu=smmuv3"])
+            self._args.extend(["-machine", "virt,hybrid-secure=on,virtualization=on,gic-version=3,mte=on,iommu=smmuv3"])
+            self._args.extend(["-accel", "kvm,arm-ffa-forward=on"])
 
         self._args.extend(
                 ["-global", "driver=cfi.pflash01,property=secure,value=on"]
@@ -115,7 +116,7 @@ class QemuCommandBuilder:
             cpu_features = f"{cpu_model},+rdrand,+umip,+smep,+pdpe1gb,+popcnt,+sse,+sse2,+sse3,+ssse3,+sse4.2,+sse4.1"
             self._args.extend(["-cpu", cpu_features])
         elif self._architecture == QemuArchitecture.ARM_VIRT:
-            self._args.extend(["-cpu", "max,sve=off,sme=off"])
+            self._args.extend(["-cpu", model or "host"])
 
         if core_count:
             self._args.extend(["-smp", str(core_count)])
