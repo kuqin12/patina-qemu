@@ -95,7 +95,7 @@ class QemuCommandBuilder:
 
             self._args.extend(["-machine", machine_config])
         elif self._architecture == QemuArchitecture.ARM_VIRT:
-            self._args.extend(["-machine", "virt,hybrid-secure=on,gic-version=3,iommu=smmuv3"])
+            self._args.extend(["-machine", "virt,hybrid-secure=on,gic-version=3"])
             self._args.extend(["-accel", "kvm,arm-ffa-forward=on"])
 
         self._args.extend(

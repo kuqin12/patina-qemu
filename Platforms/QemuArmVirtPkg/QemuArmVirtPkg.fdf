@@ -356,7 +356,7 @@ READ_LOCK_STATUS   = TRUE
   #
   # SMMU Support
   #
-  INF ArmPkg/Drivers/SmmuDxe/SmmuDxe.inf
+  # INF ArmPkg/Drivers/SmmuDxe/SmmuDxe.inf
 
   #
   # TPM2 support
@@ -443,15 +443,7 @@ READ_LOCK_CAP       = TRUE
 READ_LOCK_STATUS    = TRUE
 
 FILE DXE_CORE = 23C9322F-2AF2-476A-BC4C-26BC88266C71 {
-!ifdef $(DXE_CORE_BINARY_OVERRIDE)
-  SECTION PE32 = $(DXE_CORE_BINARY_OVERRIDE)                                  # User defined override
-!else
-  !if $(TARGET) == RELEASE
-    SECTION PE32 = $(DXE_CORE_PATH)/release/qemu_armvirt_dxe_core.efi # Nuget feed release build
-  !else
-    SECTION PE32 = $(DXE_CORE_PATH)/debug/qemu_armvirt_dxe_core.efi
-  !endif
-!endif
+  SECTION PE32 = /home/testuser/patina-dxe-core-qemu/target/aarch64-unknown-uefi/debug/qemu_armvirt_dxe_core.efi
   SECTION UI = "DxeCore"
 }
 
