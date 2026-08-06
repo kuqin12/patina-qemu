@@ -249,7 +249,7 @@ interrupt behavior gates now pass on this host.
 - Add deterministic stop conditions for normal-world handoff and secure return.
 
 Exit criterion: TF-A and Hafnium reach their waiting state under shadow TCG,
-then process a synthetic direct request and return to the boundary.
+then stop at the BL33 boundary with the normal-world entry state captured.
 
 #### Current Phase 2 Status
 
@@ -272,25 +272,43 @@ Shadow-only normal and secure tag-memory views provide the MTE support required
 by the current Hafnium image. TCG TLB maintenance skips KVM CPUs and executes
 broadcast invalidations locally for the single shadow CPU.
 
+The shadow CPU also registers TCG memory listeners even though KVM is the active
+machine accelerator. Memory-topology changes such as CFI flash ROMD mode
+transitions flush the shadow TLB immediately when they originate on the secure
+worker. Changes from another thread are recorded as pending, kick the worker if
+it is active, and are applied before the next secondary-TCG execution. This is
+required for command writes followed immediately by status reads in STMM.
+Secondary-TCG listeners intentionally omit the standard
+`log_global_after_sync` callback: it queues synchronous `run_on_cpu()` work,
+which a custom worker cannot service while idle. Registering it deadlocks GTK's
+Bochs dirty-bitmap refresh and starves unrelated device work such as NVMe.
+
 With `SECURE_FLASH0.fd` and `QEMU_EFI.fd`, the shadow worker boots BL1, BL2, BL31,
 Hafnium, STMM, and MSSP. STMM and MSSP each enter their message loop, and TF-A
-reaches the normal-world BL33 boundary at `0x04000000`. A synthetic
-`FFA_MSG_SEND_DIRECT_REQ2` then reaches MSSP endpoint `0x8002` and returns
-`FFA_MSG_SEND_DIRECT_RESP2` through a read-only `SMC`/`WFI` trampoline at
-`0x0b000000`. The current MSSP image was built with `TPM2_ENABLE=False`, so its
-TPM stub returns a service-level error. The FF-A transport and secure return are
-validated here, while TPM semantics remain a Phase 3 test.
+reaches the normal-world BL33 boundary at the flash1 base. QEMU does not issue
+an FF-A request during bootstrap; service endpoint, UUID, and command validation
+belong to the Phase 3 normal-world runtime tests.
 
 After QEMU's initial reset, the shadow remains at the captured BL33 boundary and
-the secure GIC retains the firmware-initialized state. The captured BL33 `x0-x3`
-and PC are transferred to KVM CPU0. This host does not expose nested EL2, so KVM
-retains its NS-EL1 PSTATE rather than receiving the shadow EL2 PSTATE. UEFI and
-DXE then execute under KVM.
+the secure GIC retains the firmware-initialized state. The captured BL33
+`x0-x30` and flash-derived PC are transferred to KVM CPU0. This host does not
+expose nested EL2, so KVM retains its NS-EL1 PSTATE and stack rather than
+receiving the shadow EL2 privileged state. UEFI and DXE then execute under KVM.
 
 The reproducible test is `tests/arm-kvm/run-hybrid-shadow-bootstrap.sh` in the
-QEMU tree. Migration is explicitly blocked. General reset, snapshots, multiple
-shadow pCPUs, and secure-call timeouts are not yet supported. The Phase 2
-bootstrap and synthetic direct-request exit criterion passes.
+QEMU tree. Its UEFI phase uses a disposable writable secure flash and requires
+BDS to complete without a secure-call timeout, NOR erase error, or synchronous
+exception. It also boots with a disposable NVMe namespace at 8 GiB using direct
+DMA and requires NVMe initialization to complete without a command timeout.
+When GTK is available, the same check runs with an active Bochs framebuffer to
+cover display dirty-log synchronization. Migration is explicitly blocked.
+General reset, snapshots, multiple
+shadow pCPUs are not yet supported. Runtime secure calls have a five-second
+deadline by default. On timeout, QEMU interrupts the hidden TCG CPU at a
+translation-block boundary, returns `FFA_ABORTED`, and disables further secure
+entry because firmware and device state may be mid-transaction. If cancellation
+does not complete within one second, QEMU requests an internal-error VM stop.
+The Phase 2 bootstrap and KVM handoff exit criterion passes.
 
 ### Phase 3: Shared CRB and TPM
 
@@ -314,6 +332,9 @@ zero-extended `FFA_BUSY` to a competing caller rather than queueing it.
 guest that sends the TPM service `DIRECT_REQ2` and validates `DIRECT_RESP2` from
 MSSP. `tests/arm-kvm/run-hybrid-ffa-busy.sh` starts two KVM vCPUs, verifies one
 exit from each CPU, and requires one direct response plus one `FFA_BUSY`.
+`tests/arm-kvm/run-hybrid-ffa-timeout.sh` forces a one-millisecond deadline and
+validates `FFA_ABORTED` plus successful hidden-worker cancellation without
+booting platform firmware or enabling a display backend.
 
 The firmware-owned internal CRB buffer remains ordinary machine RAM, so KVM and
 the shadow normal view share its existing backing without a QEMU TPM-address
@@ -346,7 +367,7 @@ concurrent calls fail or retry predictably without corrupting CRB state.
 
 - Verify VGIC pending behavior during secure execution.
 - Measure TPM call duration, IRQ latency and Windows watchdog behavior.
-- Add secure-call timeouts and diagnostics.
+- Validate secure-call deadline and cancellation behavior under Windows load.
 - Implement `FFA_INTERRUPT`/`FFA_RUN` preemption only if queued latency is not
   acceptable.
 
