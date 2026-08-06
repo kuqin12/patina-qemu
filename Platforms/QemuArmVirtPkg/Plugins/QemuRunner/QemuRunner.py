@@ -69,6 +69,115 @@ class QemuRunner(uefi_helper_plugin.IUefiHelperPlugin):
         return env.GetValue(key) or default
 
     @staticmethod
+    def ParseCpuList(cpu_list: str) -> set[int]:
+        """Parses a Linux CPU list such as ``0-3,8-11``."""
+        cpus = set()
+        for entry in cpu_list.strip().split(","):
+            if not entry:
+                continue
+            if "-" in entry:
+                first, last = (int(value) for value in entry.split("-", 1))
+                cpus.update(range(first, last + 1))
+            else:
+                cpus.add(int(entry))
+        return cpus
+
+    @staticmethod
+    def FormatCpuList(cpus: set[int]) -> str:
+        """Formats CPU indices using Linux CPU-list notation."""
+        ranges = []
+        first = None
+        last = None
+        for cpu in sorted(cpus):
+            if first is None:
+                first = last = cpu
+            elif cpu == last + 1:
+                last = cpu
+            else:
+                ranges.append(str(first) if first == last else f"{first}-{last}")
+                first = last = cpu
+
+        if first is not None:
+            ranges.append(str(first) if first == last else f"{first}-{last}")
+        return ",".join(ranges)
+
+    @staticmethod
+    def GetPreferredPmuAffinity() -> set[int] | None:
+        """Selects the fastest homogeneous Arm PMU CPU domain on Linux."""
+        if os.name != "posix" or not hasattr(os, "sched_getaffinity"):
+            return None
+
+        event_source_path = "/sys/bus/event_source/devices"
+        try:
+            allowed_cpus = set(os.sched_getaffinity(0))
+            with os.scandir(event_source_path) as event_sources:
+                entries = sorted(event_sources, key=lambda entry: entry.name)
+        except OSError:
+            return None
+
+        pmu_domains = []
+        for entry in entries:
+            if not entry.name.startswith("armv8_pmuv3_"):
+                continue
+            try:
+                with open(os.path.join(entry.path, "cpus"), encoding="ascii") as cpus_file:
+                    cpus = QemuRunner.ParseCpuList(cpus_file.read()) & allowed_cpus
+            except (OSError, ValueError):
+                continue
+            if cpus:
+                pmu_domains.append((entry.name, cpus))
+
+        if len(pmu_domains) < 2:
+            return None
+
+        metrics = (
+            ("cpu_capacity", "scheduler capacity"),
+            ("acpi_cppc/highest_perf", "CPPC highest performance"),
+            ("cpufreq/cpuinfo_max_freq", "maximum frequency"),
+        )
+        selected_domain = None
+        selected_metric = None
+        selected_score = None
+        for metric_path, metric_name in metrics:
+            domain_scores = []
+            for domain_name, cpus in pmu_domains:
+                scores = []
+                for cpu in cpus:
+                    path = os.path.join(
+                        "/sys/devices/system/cpu", f"cpu{cpu}", metric_path
+                    )
+                    try:
+                        with open(path, encoding="ascii") as metric_file:
+                            scores.append(int(metric_file.read().strip(), 0))
+                    except (OSError, ValueError):
+                        pass
+                domain_scores.append(
+                    (max(scores) if scores else None, domain_name, cpus)
+                )
+
+            if all(score is not None for score, _, _ in domain_scores):
+                selected_score, domain_name, selected_domain = max(domain_scores)
+                selected_metric = metric_name
+                break
+
+        if selected_domain is None:
+            domain_name, selected_domain = pmu_domains[0]
+            logging.warning(
+                "Unable to rank heterogeneous Arm PMU domains; selecting %s",
+                domain_name,
+            )
+        else:
+            logging.info(
+                "Selecting Arm PMU domain %s on CPUs %s (%s: %d)",
+                domain_name,
+                QemuRunner.FormatCpuList(selected_domain),
+                selected_metric,
+                selected_score,
+            )
+
+        return selected_domain
+
+    @staticmethod
     def StartSwTpm(tpm_dir, tpm_sock):
         """Starts the swtpm emulator and returns its Popen handle.
 
@@ -236,10 +345,21 @@ class QemuRunner(uefi_helper_plugin.IUefiHelperPlugin):
             except Exception:
                 std_handle = None
 
-        # Run QEMU
+        # Run QEMU. KVM requires vCPUs to remain in one hardware PMU domain on
+        # heterogeneous Arm hosts; child processes inherit this affinity.
+        original_affinity = None
         try:
+            pmu_affinity = QemuRunner.GetPreferredPmuAffinity()
+            if pmu_affinity is not None:
+                original_affinity = set(os.sched_getaffinity(0))
+                os.sched_setaffinity(0, pmu_affinity)
             ret = utility_functions.RunCmd(executable, str.join(" ", args))
         finally:
+            if original_affinity is not None:
+                try:
+                    os.sched_setaffinity(0, original_affinity)
+                except OSError as error:
+                    logging.warning("Failed to restore runner CPU affinity: %s", error)
             QemuRunner.StopSwTpm(swtpm_proc)
 
         ## TODO: restore the customized RunCmd once unit tests with asserts are figured out
