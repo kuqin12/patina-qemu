@@ -303,8 +303,8 @@ class QemuRunner(uefi_helper_plugin.IUefiHelperPlugin):
             )
             .with_tpm(sw_tpm_enable, tpm_dir=output_path)
             .with_gdb_server(gdb_server_port)
-            .with_serial_port(None, log_files=["secure_mm.log"])
-            .with_virtio_serial(serial_port)
+            .with_serial_port(serial_port, log_files=["secure_mm.log"])
+            # .with_virtio_serial(serial_port)
             .with_monitor_port(monitor_port)
         )
 
