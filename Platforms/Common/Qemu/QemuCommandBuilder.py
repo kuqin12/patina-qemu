@@ -351,7 +351,7 @@ class QemuCommandBuilder:
             self._args.extend(["-net", "none"])
             return self
 
-        netdev_config = "user,id=net0"
+        netdev_config = "tap,id=net0,ifname=tap-hlk,script=no,downscript=no"
 
         if forward_ports:
             self._logger.debug(f"Configuring port forwarding: {forward_ports}")
@@ -365,7 +365,10 @@ class QemuCommandBuilder:
             self._args.extend(["-device", "virtio-net-pci,netdev=net0"])
         else:
             # Booting to Windows, use a PCI nic
-            self._args.extend(["-device", "e1000,netdev=net0"])
+            self._args.extend(["-device", "virtio-net-pci,netdev=net0"])
+
+            self._args.extend(["-drive", "file=/home/testuser/Downloads/virtio-win-0.1.285.iso,format=raw,media=cdrom,readonly=on,if=none,id=virtio_win"])
+            self._args.extend(["-device", "usb-storage,bus=usb.0,drive=virtio_win"])
 
         return self
 

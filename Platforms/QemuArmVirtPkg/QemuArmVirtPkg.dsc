@@ -996,6 +996,7 @@
       NULL|SecurityPkg/Library/HashInstanceLibSha512/HashInstanceLibSha512.inf
       NULL|SecurityPkg/Library/HashInstanceLibSm3/HashInstanceLibSm3.inf
   }
+  SecurityPkg/Tcg/MemoryOverwriteControl/TcgMor.inf
 !if $(TPM2_CONFIG_ENABLE) == TRUE
   SecurityPkg/Tcg/Tcg2Config/Tcg2ConfigDxe.inf
 !endif
