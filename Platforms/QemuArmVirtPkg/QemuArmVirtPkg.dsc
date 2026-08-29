@@ -511,6 +511,7 @@
   gAdvLoggerPkgTokenSpaceGuid.PcdAdvancedLoggerLocator|TRUE
   gAdvLoggerPkgTokenSpaceGuid.PcdAdvancedLoggerAutoWrapEnable|TRUE
   gAdvLoggerPkgTokenSpaceGuid.PcdAdvancedLoggerFixedInRAM|TRUE
+  gAdvLoggerPkgTokenSpaceGuid.PcdAdvancedLoggerHdwPortOsRuntimeDisable|TRUE
 
   !if $(USB_BOOT_PRIORITY) == TRUE
     gQemuPkgTokenSpaceGuid.PcdUsbBootPriority|TRUE
@@ -765,8 +766,8 @@
   # TPM2 support
   #
 !if $(TPM2_ENABLE) == TRUE
-  gEfiSecurityPkgTokenSpaceGuid.PcdTpm2HashMask|0x02
-  gEfiSecurityPkgTokenSpaceGuid.PcdTcg2HashAlgorithmBitmap|0x02
+  gEfiSecurityPkgTokenSpaceGuid.PcdTpm2HashMask|0x0F
+  gEfiSecurityPkgTokenSpaceGuid.PcdTcg2HashAlgorithmBitmap|0x0F
 !endif
 
 [PcdsDynamicHii]
