@@ -353,7 +353,7 @@ class QemuRunner(uefi_helper_plugin.IUefiHelperPlugin):
             if pmu_affinity is not None:
                 original_affinity = set(os.sched_getaffinity(0))
                 os.sched_setaffinity(0, pmu_affinity)
-            ret = utility_functions.RunCmd(executable, str.join(" ", args))
+            ret = utility_functions.RunCmd(executable, str.join(" ", args), encodingErrors="replace")
         finally:
             if original_affinity is not None:
                 try:

@@ -523,12 +523,12 @@ class QemuCommandBuilder:
 
         return self
 
-    def with_gdb_server(self, port, ip="127.0.0.1"):
+    def with_gdb_server(self, port, ip="0.0.0.0"):
         """Enable GDB server
 
         Args:
             port: Port number for GDB server
-            ip: IP address to bind to (default: 127.0.0.1)
+            ip: IP address to bind to (default: all IPv4 interfaces)
         """
         if self._gdb_server_added:
             self._logger.debug("GDB server already configured, skipping")
@@ -540,13 +540,13 @@ class QemuCommandBuilder:
             self._args.extend(["-gdb", f"tcp:{ip}:{port}"])
         return self
 
-    def with_serial_port(self, port=None, log_files=None, ip="127.0.0.1"):
+    def with_serial_port(self, port=None, log_files=None, ip="0.0.0.0"):
         """Configure serial port for console output
 
         Args:
             port: Port number for TCP serial connection (None for stdio)
             log_files: List of log files to write serial output to (only used when port is None)
-            ip: IP address to bind to (default: 127.0.0.1)
+            ip: IP address to bind to (default: all IPv4 interfaces)
         """
         if self._serial_port_added:
             self._logger.debug("Serial port already configured, skipping")
