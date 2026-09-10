@@ -256,7 +256,15 @@ class QemuCommandBuilder:
 
         if os.path.isfile(virtual_drive):
             self._logger.debug(f"Mounting virtual drive file: {virtual_drive}")
-            self._args.extend(["-drive", f"file={virtual_drive},if=virtio"])
+            if self._architecture == QemuArchitecture.ARM_VIRT:
+                self._args.extend(
+                    ["-drive", f"file={virtual_drive},if=none,id=virtual_drive"]
+                )
+                self._args.extend(
+                    ["-device", "virtio-blk-device,drive=virtual_drive"]
+                )
+            else:
+                self._args.extend(["-drive", f"file={virtual_drive},if=virtio"])
         elif os.path.isdir(virtual_drive):
             self._logger.debug(
                 "Mounting virtual drive directory as FAT filesystem: %s", virtual_drive
@@ -519,7 +527,7 @@ class QemuCommandBuilder:
             # Pin to a fixed PCI slot so the firmware's preferred-video
             # device path stays stable regardless of how many other PCI
             # devices precede it on the command line.
-            self._args.extend(["-device", "bochs-display,addr=0x1f"])
+            self._args.extend(["-device", "VGA,addr=0x1f"])
 
         return self
 

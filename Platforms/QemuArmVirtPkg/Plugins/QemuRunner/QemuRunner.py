@@ -305,7 +305,7 @@ class QemuRunner(uefi_helper_plugin.IUefiHelperPlugin):
             .with_storage(path_to_os, os_boot_device)
             .with_virtual_drive(None if path_to_os else virtual_drive)
             .with_display(not headless)
-            .with_network(True)
+            .with_network(True, use_virtio=not path_to_os)
             .with_smbios(
                 smbios_values={
                     # Type 0 (BIOS Information)
