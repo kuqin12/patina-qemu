@@ -8,7 +8,7 @@
   "scope": "qemuarmvirt",
   "type": "web",
   "name": "secure_partition_binaries",
-  "source": "https://github.com/microsoft/mu_feature_ffa/releases/download/v1.0.0/rust-secure-partitions-v1.0.1.tar.gz",
+  "source": "https://github.com/microsoft/mu_feature_ffa/releases/download/v1.0.1/rust-secure-partitions-v1.0.1.tar.gz",
   "version": "v1.0.1",
   "sha256": "2fb288dde49698a4f95a5fc9919cc736e1efbfd06d3a1fbc958b7b3b77cade2b",
   "internal_path": "/rust-secure-partitions",
