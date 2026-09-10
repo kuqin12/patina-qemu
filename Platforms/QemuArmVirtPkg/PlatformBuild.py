@@ -359,6 +359,7 @@ class PlatformBuilder(UefiBuilder, BuildSettingsManager):
             Env("STARTUP_NSH", "", "UEFI Shell Startup script to run if specified (Not compatible with `RUN_TESTS==TRUE`)."),
             Env("EMPTY_DRIVE", "FALSE", "Whether to empty the virtual drive used by the shell before running."),
             Env("SHUTDOWN_AFTER_RUN", "FALSE", "Whether or not to shutdown after the startup nsh runs."),
+            Env("SWTPM_PCR_BANKS", "sha256,sha384", "PCR banks used when initializing new swtpm state."),
         ]
 
     #
@@ -851,7 +852,7 @@ class PlatformBuilder(UefiBuilder, BuildSettingsManager):
                 mssp_bin_name = "msft-sp-virt-tpm.bin"
             else:
                 mssp_bin_name = "msft-sp-virt.bin"
-            mssp_bin_path = os.path.join(self.env.GetValue("SECURE_PARTITION_BINARIES"), mssp_bin_name)
+            mssp_bin_path = os.path.join("/home/testuser/patina-qemu/Platforms/QemuArmVirtPkg/Binaries", mssp_bin_name)
             logging.info(f"TPM2_ENABLE={tpm2_enable}; using prebuilt SP binary '{mssp_bin_path}'")
 
         # Set Default BIN and DTS paths if not on command prompt

@@ -69,6 +69,30 @@ class QemuRunner(uefi_helper_plugin.IUefiHelperPlugin):
         return env.GetValue(key) or default
 
     @staticmethod
+    def InitializeSwTpmState(tpm_dir, pcr_banks):
+        """Manufactures new TPM state with the requested PCR banks."""
+        tpm_state = os.path.join(tpm_dir, "tpm2-00.permall")
+        if os.path.exists(tpm_state):
+            return
+
+        cmd = [
+            "swtpm_setup",
+            "--tpm2",
+            "--tpmstate", tpm_dir,
+            "--pcr-banks", pcr_banks,
+            "--not-overwrite",
+        ]
+        logging.info("Initializing swtpm state with PCR banks: %s", pcr_banks)
+        try:
+            subprocess.run(cmd, check=True)
+        except FileNotFoundError as error:
+            raise FileNotFoundError(
+                "swtpm_setup executable not found on PATH. Install swtpm-tools "
+                "(e.g. 'sudo apt install swtpm-tools' on Debian/Ubuntu or "
+                "'sudo dnf install swtpm-tools' on Fedora)."
+            ) from error
+
+    @staticmethod
     def ParseCpuList(cpu_list: str) -> set[int]:
         """Parses a Linux CPU list such as ``0-3,8-11``."""
         cpus = set()
@@ -236,6 +260,7 @@ class QemuRunner(uefi_helper_plugin.IUefiHelperPlugin):
         repo_version = QemuRunner.GetStr(env, "VERSION", "Unknown")
         serial_port = QemuRunner.GetStr(env, "SERIAL_PORT")
         sw_tpm_enable = QemuRunner.GetBool(env, "SWTPM_ENABLE", True)
+        sw_tpm_pcr_banks = QemuRunner.GetStr(env, "SWTPM_PCR_BANKS", "sha256,sha384")
         virtual_drive = QemuRunner.GetStr(env, "VIRTUAL_DRIVE_PATH")
 
         secure_fd = os.path.join(output_path, "FV", "SECURE_FLASH0.fd")
@@ -318,6 +343,7 @@ class QemuRunner(uefi_helper_plugin.IUefiHelperPlugin):
         if sw_tpm_enable:
             tpm_dir = env.GetValue("BUILD_OUTPUT_BASE")
             tpm_sock = os.path.join(tpm_dir, "swtpm-sock")
+            QemuRunner.InitializeSwTpmState(tpm_dir, sw_tpm_pcr_banks)
             logging.info("Starting swtpm emulator.")
             swtpm_proc = QemuRunner.StartSwTpm(tpm_dir, tpm_sock)
 

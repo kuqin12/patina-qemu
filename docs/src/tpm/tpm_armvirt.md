@@ -495,10 +495,17 @@ sudo dnf install swtpm swtpm-tools
 
 ### Manual Setup
 
-Create the TPM state directory and start swtpm before launching QEMU:
+Create the TPM state directory, manufacture its persistent state with the desired PCR banks, and
+then start swtpm before launching QEMU:
 
 ```bash
 mkdir -p /tmp/mytpm1
+swtpm_setup \
+  --tpm2 \
+  --tpmstate /tmp/mytpm1 \
+  --pcr-banks sha256,sha384 \
+  --not-overwrite
+
 swtpm socket \
   --tpmstate dir=/tmp/mytpm1 \
   --ctrl type=unixio,path=/tmp/mytpm1/swtpm-sock \
@@ -510,10 +517,38 @@ swtpm socket \
 
 When `SWTPM_ENABLE=TRUE`, `QemuRunner.py` automatically starts swtpm as a subprocess before
 launching QEMU. The swtpm state directory is set to `BUILD_OUTPUT_BASE` and the Unix socket
-is placed at `{BUILD_OUTPUT_BASE}/swtpm-sock`:
+is placed at `{BUILD_OUTPUT_BASE}/swtpm-sock`.
+
+Before the first launch, the runner uses `swtpm_setup` to manufacture persistent TPM state with
+the PCR banks specified by `SWTPM_PCR_BANKS`. The default is `sha256,sha384`. On later launches,
+the presence of `tpm2-00.permall` causes setup to be skipped, preserving TPM objects and settings.
+For example, a fresh SHA-256-only instance can be requested with:
+
+```bash
+stuart_build -c Platforms/QemuArmVirtPkg/PlatformBuild.py --FlashOnly \
+  SWTPM_PCR_BANKS=sha256
+```
+
+Changing `SWTPM_PCR_BANKS` does not modify existing state. With QEMU and swtpm stopped, explicitly
+reconfigure an existing instance using:
+
+```bash
+swtpm_setup \
+  --tpm2 \
+  --tpmstate Build/QemuArmVirtPkg/DEBUG_CLANGPDB \
+  --pcr-banks sha256,sha384 \
+  --reconfigure
+```
+
+The exact build output directory depends on the active target and toolchain. Alternatively, remove
+`tpm2-00.permall` to manufacture a new TPM, but doing so destroys its persistent state.
+
+The runner performs setup and launch as follows:
 
 ```python
 # Platforms/QemuArmVirtPkg/Plugins/QemuRunner/QemuRunner.py
+QemuRunner.InitializeSwTpmState(tpm_dir, sw_tpm_pcr_banks)
+
 @staticmethod
 def StartSwTpm(tpm_dir, tpm_sock):
     """Starts the swtpm emulator and returns its Popen handle."""
@@ -530,7 +565,8 @@ def StartSwTpm(tpm_dir, tpm_sock):
 swtpm is started before QEMU launches. `QemuRunner` then waits (up to 30 seconds) for the
 Unix socket to appear before starting QEMU, and terminates the swtpm process so it doesn't
 outlive the run. SWTPM is enabled by default. Disable it by setting `SWTPM_ENABLE=FALSE` on
-the command line or in the BuildConfig.conf file.
+the command line or in the BuildConfig.conf file. Automatic initialization requires both `swtpm`
+and `swtpm_setup`; on Debian/Ubuntu, `swtpm_setup` is provided by `swtpm-tools`.
 
 ```admonish note
 SWTPM is only available on Linux builds. `QemuRunner` automatically disables it on Windows
