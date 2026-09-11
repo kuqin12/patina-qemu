@@ -525,7 +525,8 @@ and ECC endorsement keys, EK certificates, and a platform certificate. Certifica
 a private local CA under `{BUILD_OUTPUT_BASE}/swtpm-localca`, avoiding the system CA state in
 `/var/lib/swtpm-localca`, which is normally not writable by an unprivileged build user. On later
 launches, the presence of `tpm2-00.permall` causes setup to be skipped, preserving TPM objects,
-certificates, and settings.
+certificates, and settings. The custom TPM profile retains SHA-512 support but does not advertise
+the NIST P-521 curve.
 For example, a fresh SHA-256-only instance can be requested with:
 
 ```bash

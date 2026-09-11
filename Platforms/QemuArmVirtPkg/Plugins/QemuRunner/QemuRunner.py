@@ -25,9 +25,10 @@ class QemuRunner(uefi_helper_plugin.IUefiHelperPlugin):
     SWTPM_PROFILE = (
         '{"Name":"custom","Algorithms":"rsa,rsa-min-size=1024,tdes,'
         'tdes-min-size=128,sha1,hmac,aes,aes-min-size=128,mgf1,keyedhash,xor,'
-        'sha256,sha384,null,rsassa,rsaes,rsapss,oaep,ecdsa,ecdh,ecdaa,sm2,'
+        'sha256,sha384,sha512,null,rsassa,rsaes,rsapss,oaep,ecdsa,ecdh,ecdaa,sm2,'
         'ecschnorr,ecmqv,kdf1-sp800-56a,kdf2,kdf1-sp800-108,ecc,'
-        'ecc-min-size=192,ecc-nist,ecc-bn,ecc-sm2-p256,symcipher,camellia,'
+        'ecc-min-size=192,ecc-nist-p192,ecc-nist-p224,ecc-nist-p256,'
+        'ecc-nist-p384,ecc-bn,ecc-sm2-p256,symcipher,camellia,'
         'camellia-min-size=128,cmac,ctr,ofb,cbc,cfb,ecb"}'
     )
 
