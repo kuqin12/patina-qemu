@@ -766,8 +766,8 @@
   # TPM2 support
   #
 !if $(TPM2_ENABLE) == TRUE
-  gEfiSecurityPkgTokenSpaceGuid.PcdTpm2HashMask|0x0E
-  gEfiSecurityPkgTokenSpaceGuid.PcdTcg2HashAlgorithmBitmap|0x0E
+  gEfiSecurityPkgTokenSpaceGuid.PcdTpm2HashMask|0x06
+  gEfiSecurityPkgTokenSpaceGuid.PcdTcg2HashAlgorithmBitmap|0x06
 !endif
 
 [PcdsDynamicHii]

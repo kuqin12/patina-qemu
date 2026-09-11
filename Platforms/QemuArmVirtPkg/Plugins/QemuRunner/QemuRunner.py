@@ -10,6 +10,7 @@ import logging
 import io
 import os
 import re
+import shutil
 import subprocess
 import time
 from edk2toolext.environment.plugintypes import uefi_helper_plugin
@@ -20,6 +21,15 @@ from QemuCommandBuilder import QemuArchitecture
 
 
 class QemuRunner(uefi_helper_plugin.IUefiHelperPlugin):
+
+    SWTPM_PROFILE = (
+        '{"Name":"custom","Algorithms":"rsa,rsa-min-size=1024,tdes,'
+        'tdes-min-size=128,sha1,hmac,aes,aes-min-size=128,mgf1,keyedhash,xor,'
+        'sha256,sha384,null,rsassa,rsaes,rsapss,oaep,ecdsa,ecdh,ecdaa,sm2,'
+        'ecschnorr,ecmqv,kdf1-sp800-56a,kdf2,kdf1-sp800-108,ecc,'
+        'ecc-min-size=192,ecc-nist,ecc-bn,ecc-sm2-p256,symcipher,camellia,'
+        'camellia-min-size=128,cmac,ctr,ofb,cbc,cfb,ecb"}'
+    )
 
     def __init__(self):
         self.logger = logging.getLogger(__name__)
@@ -69,18 +79,63 @@ class QemuRunner(uefi_helper_plugin.IUefiHelperPlugin):
         return env.GetValue(key) or default
 
     @staticmethod
+    def CreateSwTpmCaConfig(tpm_dir):
+        """Creates an unprivileged local CA configuration for TPM certificates."""
+        localca_executable = shutil.which("swtpm_localca")
+        if localca_executable is None:
+            raise FileNotFoundError(
+                "swtpm_localca executable not found on PATH. Install swtpm-tools."
+            )
+
+        ca_dir = os.path.join(tpm_dir, "swtpm-localca")
+        os.makedirs(ca_dir, mode=0o700, exist_ok=True)
+
+        localca_config = os.path.join(tpm_dir, "swtpm-localca.conf")
+        with open(localca_config, "w", encoding="utf-8") as config_file:
+            config_file.write(
+                f"statedir = {ca_dir}\n"
+                f"signingkey = {os.path.join(ca_dir, 'signkey.pem')}\n"
+                f"issuercert = {os.path.join(ca_dir, 'issuercert.pem')}\n"
+                f"certserial = {os.path.join(ca_dir, 'certserial')}\n"
+            )
+
+        localca_options = os.path.join(tpm_dir, "swtpm-localca.options")
+        with open(localca_options, "w", encoding="utf-8") as options_file:
+            options_file.write(
+                "--platform-manufacturer OpenDevicePartnership\n"
+                "--platform-version 1.0\n"
+                "--platform-model QEMU ARM Virt\n"
+            )
+
+        setup_config = os.path.join(tpm_dir, "swtpm_setup.conf")
+        with open(setup_config, "w", encoding="utf-8") as config_file:
+            config_file.write(
+                f"create_certs_tool = {localca_executable}\n"
+                f"create_certs_tool_config = {localca_config}\n"
+                f"create_certs_tool_options = {localca_options}\n"
+            )
+
+        return setup_config
+
+    @staticmethod
     def InitializeSwTpmState(tpm_dir, pcr_banks):
         """Manufactures new TPM state with the requested PCR banks."""
         tpm_state = os.path.join(tpm_dir, "tpm2-00.permall")
         if os.path.exists(tpm_state):
             return
 
+        setup_config = QemuRunner.CreateSwTpmCaConfig(tpm_dir)
         cmd = [
             "swtpm_setup",
+            "--config", setup_config,
             "--tpm2",
             "--tpmstate", tpm_dir,
             "--pcr-banks", pcr_banks,
+            "--profile", QemuRunner.SWTPM_PROFILE,
             "--not-overwrite",
+            "--create-ek-cert",
+            "--create-platform-cert",
+            "--lock-nvram",
         ]
         logging.info("Initializing swtpm state with PCR banks: %s", pcr_banks)
         try:

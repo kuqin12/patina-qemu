@@ -520,8 +520,12 @@ launching QEMU. The swtpm state directory is set to `BUILD_OUTPUT_BASE` and the 
 is placed at `{BUILD_OUTPUT_BASE}/swtpm-sock`.
 
 Before the first launch, the runner uses `swtpm_setup` to manufacture persistent TPM state with
-the PCR banks specified by `SWTPM_PCR_BANKS`. The default is `sha256,sha384`. On later launches,
-the presence of `tpm2-00.permall` causes setup to be skipped, preserving TPM objects and settings.
+the PCR banks specified by `SWTPM_PCR_BANKS`. The default is `sha256,sha384`. It also creates RSA
+and ECC endorsement keys, EK certificates, and a platform certificate. Certificate generation uses
+a private local CA under `{BUILD_OUTPUT_BASE}/swtpm-localca`, avoiding the system CA state in
+`/var/lib/swtpm-localca`, which is normally not writable by an unprivileged build user. On later
+launches, the presence of `tpm2-00.permall` causes setup to be skipped, preserving TPM objects,
+certificates, and settings.
 For example, a fresh SHA-256-only instance can be requested with:
 
 ```bash
@@ -541,7 +545,9 @@ swtpm_setup \
 ```
 
 The exact build output directory depends on the active target and toolchain. Alternatively, remove
-`tpm2-00.permall` to manufacture a new TPM, but doing so destroys its persistent state.
+`tpm2-00.permall` to manufacture a new TPM, but doing so destroys its persistent state. The local
+CA is reused when only the TPM state is removed. Removing the `swtpm-localca` directory as well
+creates a new CA and invalidates trust in certificates issued by the previous CA.
 
 The runner performs setup and launch as follows:
 
@@ -565,8 +571,8 @@ def StartSwTpm(tpm_dir, tpm_sock):
 swtpm is started before QEMU launches. `QemuRunner` then waits (up to 30 seconds) for the
 Unix socket to appear before starting QEMU, and terminates the swtpm process so it doesn't
 outlive the run. SWTPM is enabled by default. Disable it by setting `SWTPM_ENABLE=FALSE` on
-the command line or in the BuildConfig.conf file. Automatic initialization requires both `swtpm`
-and `swtpm_setup`; on Debian/Ubuntu, `swtpm_setup` is provided by `swtpm-tools`.
+the command line or in the BuildConfig.conf file. Automatic initialization requires `swtpm`,
+`swtpm_setup`, and `swtpm_localca`; on Debian/Ubuntu, the latter two are provided by `swtpm-tools`.
 
 ```admonish note
 SWTPM is only available on Linux builds. `QemuRunner` automatically disables it on Windows
