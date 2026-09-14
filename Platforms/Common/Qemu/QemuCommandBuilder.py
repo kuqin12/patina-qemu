@@ -333,7 +333,7 @@ class QemuCommandBuilder:
 
         return self
 
-    def with_network(self, enabled=True, forward_ports=None, use_virtio=False):
+    def with_network(self, enabled=True, forward_ports=None, use_virtio=False, mac_address=None):
         """Configure network device with user mode networking
 
         Args:
@@ -348,6 +348,7 @@ class QemuCommandBuilder:
                 - True: Uses virtio-net-pci device (better performance, requires virtio drivers)
                 - False: Uses e1000 device (broader compatibility, standard Ethernet emulation)
                 (ignored when enabled=False)
+            mac_address (str): Optional MAC address for the network device.
         """
         if self._network_added:
             self._logger.debug("Network already configured, skipping")
@@ -368,12 +369,16 @@ class QemuCommandBuilder:
 
         self._args.extend(["-netdev", netdev_config])
 
+        device_config = "virtio-net-pci,netdev=net0"
+        if mac_address:
+            device_config += f",mac={mac_address}"
+
         if use_virtio:
             # Booting to UEFI, use virtio-net-pci
-            self._args.extend(["-device", "virtio-net-pci,netdev=net0"])
+            self._args.extend(["-device", device_config])
         else:
             # Booting to Windows, use a PCI nic
-            self._args.extend(["-device", "virtio-net-pci,netdev=net0"])
+            self._args.extend(["-device", device_config])
 
             self._args.extend(["-drive", "file=/home/testuser/Downloads/virtio-win-0.1.285.iso,format=raw,media=cdrom,readonly=on,if=none,id=virtio_win"])
             self._args.extend(["-device", "usb-storage,bus=usb.0,drive=virtio_win"])

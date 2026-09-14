@@ -306,6 +306,7 @@ class QemuRunner(uefi_helper_plugin.IUefiHelperPlugin):
         gdb_server_port = QemuRunner.GetStr(env, "GDB_SERVER")
         headless = QemuRunner.GetBool(env, "QEMU_HEADLESS", False)
         monitor_port = QemuRunner.GetStr(env, "MONITOR_PORT")
+        mac_address = QemuRunner.GetStr(env, "QEMU_MAC_ADDRESS")
         output_path = QemuRunner.GetStr(env, "BUILD_OUTPUT_BASE")
         path_to_os = QemuRunner.GetStr(env, "PATH_TO_OS")
         os_boot_device = QemuRunner.GetStr(env, "OS_BOOT_DEVICE", "SSD")
@@ -361,7 +362,7 @@ class QemuRunner(uefi_helper_plugin.IUefiHelperPlugin):
             .with_storage(path_to_os, os_boot_device)
             .with_virtual_drive(None if path_to_os else virtual_drive)
             .with_display(not headless)
-            .with_network(True, use_virtio=not path_to_os)
+            .with_network(True, use_virtio=not path_to_os, mac_address=mac_address)
             .with_smbios(
                 smbios_values={
                     # Type 0 (BIOS Information)

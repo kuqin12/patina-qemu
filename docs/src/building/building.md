@@ -115,6 +115,7 @@ as those projects do not build natively on Windows. They still use clang to comp
 | `SHUTDOWN_AFTER_RUN=TRUE` | Outputs a `startup.nsh` file to the location mapped as `fs0` with `reset -s` as the final line. Used in CI in combination with `--FlashOnly` to run QEMU to the UEFI shell and then execute the contents of `startup.nsh`. |
 | `QEMU_PATH=<path>` | Use a specific QEMU binary. |
 | `QEMU_HEADLESS=TRUE` | Run QEMU with no display. CI servers run headless and require this; locally it is not needed. |
+| `QEMU_MAC_ADDRESS=<MAC>` | Override the ARM Virt guest MAC address. Use six colon-separated hexadecimal bytes representing a unicast address, for example `02:00:00:12:34:57`. |
 | `GDB_SERVER=<TCP port>` | Enables the QEMU GDB server at the provided TCP port. Connect a GDB client for hardware-level debugging. |
 | `SERIAL_PORT=<TCP port>` | Enables the specified serial port. Primarily used to connect to the software debugger when enabled. |
 | `ENABLE_NETWORK=TRUE` | Enables networking. Currently only supported on the Q35 platform. |

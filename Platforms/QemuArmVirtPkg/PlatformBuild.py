@@ -359,6 +359,7 @@ class PlatformBuilder(UefiBuilder, BuildSettingsManager):
             Env("STARTUP_NSH", "", "UEFI Shell Startup script to run if specified (Not compatible with `RUN_TESTS==TRUE`)."),
             Env("EMPTY_DRIVE", "FALSE", "Whether to empty the virtual drive used by the shell before running."),
             Env("SHUTDOWN_AFTER_RUN", "FALSE", "Whether or not to shutdown after the startup nsh runs."),
+            Env("QEMU_MAC_ADDRESS", "", "MAC address override for the QEMU network adapter."),
             Env("SWTPM_PCR_BANKS", "sha256,sha384", "PCR banks used when initializing new swtpm state."),
         ]
 

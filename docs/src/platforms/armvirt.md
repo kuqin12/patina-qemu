@@ -25,6 +25,10 @@ The ARM Virt QEMU launcher expects a pre-created TAP interface named `tap-hlk`:
 -netdev tap,id=net0,ifname=tap-hlk,script=no,downscript=no
 ```
 
+QEMU uses its default MAC address unless `QEMU_MAC_ADDRESS=<MAC>` is specified on the command line or in
+`BuildConfig.conf`. For example, set `QEMU_MAC_ADDRESS=02:00:00:12:34:57` to retain the guest's DHCP identity across
+boots. Each concurrently running guest must use a unique unicast MAC address.
+
 The working host configuration uses a NetworkManager bridge. The physical Ethernet interface and `tap-hlk` are bridge
 ports, while the host's DHCP address and default route belong to `br-hlk`:
 
