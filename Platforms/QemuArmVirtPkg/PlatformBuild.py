@@ -853,7 +853,7 @@ class PlatformBuilder(UefiBuilder, BuildSettingsManager):
                 mssp_bin_name = "msft-sp-virt-tpm.bin"
             else:
                 mssp_bin_name = "msft-sp-virt.bin"
-            mssp_bin_path = os.path.join("/home/testuser/patina-qemu/Platforms/QemuArmVirtPkg/Binaries", mssp_bin_name)
+            mssp_bin_path = os.path.join(self.env.GetValue("SECURE_PARTITION_BINARIES"), mssp_bin_name)
             logging.info(f"TPM2_ENABLE={tpm2_enable}; using prebuilt SP binary '{mssp_bin_path}'")
 
         # Set Default BIN and DTS paths if not on command prompt
