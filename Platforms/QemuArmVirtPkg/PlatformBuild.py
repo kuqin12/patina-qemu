@@ -118,6 +118,7 @@ class SettingsManager(UpdateSettingsManager, SetupSettingsManager, PrEvalSetting
             RequiredSubmodule("Common/PATINA_EDK2", False, ".pytool/CISettings.py"),
             RequiredSubmodule("Silicon/Arm/TFA", True),
             RequiredSubmodule("Silicon/Arm/HAF", False),
+            RequiredSubmodule("Silicon/Arm/RFA", True),
             RequiredSubmodule("Features/FFA", True),
         ]
 
@@ -308,6 +309,7 @@ class PlatformBuilder(UefiBuilder, BuildSettingsManager):
         self.env.SetValue("BUILDREPORT_TYPES", "PCD DEPEX FLASH BUILD_FLAGS LIBRARY FIXED_ADDRESS HASH", "Setting build report types")
         self.env.SetValue("ARM_TFA_PATH", str(Path(self.GetWorkspaceRoot()) / "Silicon" / "Arm" / "TFA"), "Platform hardcoded")
         self.env.SetValue("ARM_HAF_PATH", str(Path(self.GetWorkspaceRoot()) / "Silicon" / "Arm" / "HAF"), "Platform hardcoded")
+        self.env.SetValue("ARM_RFA_PATH", str(Path(self.GetWorkspaceRoot()) / "Silicon" / "Arm" / "RFA"), "Platform hardcoded")
         self.env.SetValue("BLD_*_MEMORY_PROTECTION", "TRUE", "Default")
         # Include the MFCI test cert by default, override on the commandline with "BLD_*_SHIP_MODE=TRUE" if you want the retail MFCI cert
         self.env.SetValue("BLD_*_SHIP_MODE", "FALSE", "Default")
@@ -710,6 +712,19 @@ class PlatformBuilder(UefiBuilder, BuildSettingsManager):
         if ret != 0:
             return ret
 
+        logging.info("Building RFA")
+        rfa_path = Path(self.env.GetValue("ARM_RFA_PATH"))
+        rfa_out = Path(self.env.GetValue("BUILD_OUTPUT_BASE")) / "RFA"
+
+        # FEATURES="sel2 transfer_list" make PLAT=qemu build PAUTH_EL3=1 DEBUG=1 LOG_LEVEL=info BTI_EL3=1 PAUTH_LR_EL3=1
+        shell_environment.GetEnvironment().set_shell_var("CARGO_TARGET_DIR", str(rfa_out))
+        shell_environment.GetEnvironment().set_shell_var("FEATURES", "sel2 transfer_list")
+        cmd = "make"
+        args = "PLAT=qemu build PAUTH_EL3=1 DEBUG=1 LOG_LEVEL=info BTI_EL3=1 PAUTH_LR_EL3=1"
+        ret = RunCmd(cmd, args, workingdir=rfa_path)
+        if ret != 0:
+            return ret
+
         logging.info("Building TF-A")
 
         shell_environment.CheckpointBuildVars()  # checkpoint our config before we mess with it
@@ -751,6 +766,7 @@ class PlatformBuilder(UefiBuilder, BuildSettingsManager):
         args += f" SPD=spmd SPMD_SPM_AT_SEL2=1 SP_LAYOUT_FILE={filename}"
         args += " ENABLE_FEAT_HCX=1 HOB_LIST=1 TRANSFER_LIST=1 LOG_LEVEL=40 ENABLE_FEAT_MTE2=2 CTX_INCLUDE_PAUTH_REGS=1 ENABLE_FEAT_TCR2=1 ENABLE_FEAT_S1PIE=1 CFLAGS='-Wno-error=c23-extensions' " # Features used by hypervisor
         # args += " FEATURE_DETECTION=1" # Enforces support for features enabled.
+        args += f" BL31={str(rfa_out / 'bl31.bin')}"
         args += f" BL32={str(haf_out / 'secure_qemu_aarch64_clang' / 'hafnium.bin')}"
         args += f" PRELOADED_BL33_BASE=0x04000000" # This value matches the QEMU_FLASH1_BASE in platform_def.h
         args += f" QEMU_USE_GIC_DRIVER=QEMU_GICV3"
