@@ -24,3 +24,6 @@
 	path = Common/PATINA_EDK2
 	url = https://github.com/OpenDevicePartnership/patina-edk2.git
 	branch = main
+[submodule "Silicon/Arm/RFA"]
+	path = Silicon/Arm/RFA
+	url = https://review.trustedfirmware.org/RF-A/rusted-firmware-a
